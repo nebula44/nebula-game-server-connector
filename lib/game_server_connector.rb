@@ -27,15 +27,15 @@ class GameServerConnector
 
   private
 
-  def send_to_remote(action)
+  def send_to_remote(message)
     @logger.info("Connecting to #{@hostname}:#{@port}")
     socket = TCPSocket.new(@hostname, @port)
 
-    action[:params] ||= {}
-    action[:params][:control_token] = @auth_token
-    action[:id] = Time.now.to_i.to_s
+    message[:params] ||= {}
+    message[:params][:control_token] = @auth_token
+    message[:id] = Time.now.to_i.to_s
 
-    json = action.to_json
+    json = message.to_json
     @logger.debug("Sending: #{json}")
     socket.write(json + "\n")
 
@@ -69,8 +69,10 @@ class GameServerConnector
 
     params
   rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH
-    @logger.error("Connection to #{
-      @hostname}:#{@port} failed!")
-    false
+    error = "Connection to #{
+          @hostname}:#{@port} failed!"
+    @logger.error(error)
+
+    raise RemoteError, error
   end
 end
